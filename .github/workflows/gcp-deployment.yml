@@ -37,7 +37,8 @@ jobs:
             run: gcloud compute ssh vm-platform-seed --zone=asia-southeast1-c
 
           - name: Connect with the vm-platform-seed instance through SSH
-            run: >
-                gcloud compute ssh ${{ env.VM_NAME }} --zone=${{ env.ZONE }} 
-                --command "echo 'Connected to vm-platform-seed successfully!'
+            run: |
+              gcloud compute ssh ${{ env.VM_NAME }} \
+                --zone=${{ env.ZONE }} \
+                --command "echo 'Connected to vm-platform-seed successfully!'"
 
