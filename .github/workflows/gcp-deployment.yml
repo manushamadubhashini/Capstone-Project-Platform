@@ -8,16 +8,18 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
 
+        permissions:
+          contents: 'read'
+          id-token: 'write'
+
 
         steps:
-            - name: First Step For Deployment
-              run: echo "Starting GCP Deployment Process"
-
-            - name: Checkout Repository
-              uses: actions/checkout@v2
-
-            - name: Second Step For Deployment
-              run: echo "Finished GCP Deployment Process"
+          - name: Authenticate to Google Cloud
+            uses: google-github-actions/auth@v3
+            with:
+              workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+              service_account: ${{ secrets.GCP_SA_EMAIL }}
+              project_id: ${{ secrets.GCP_PROJECT_ID }}
 
 
 
