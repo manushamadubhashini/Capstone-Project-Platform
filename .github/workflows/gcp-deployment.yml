@@ -1,5 +1,8 @@
 name: Capstone Project Platform GCP Deployment
-on: Push
+on:
+  push:
+    branches:
+      - main
 
 jobs:
     deploy:
