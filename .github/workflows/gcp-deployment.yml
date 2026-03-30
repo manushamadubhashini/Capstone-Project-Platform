@@ -62,10 +62,28 @@ jobs:
             --source-disk-zone=${{ env.ZONE }} \
             --storage-location=${{ env.REGION }}
 
+      - name: Update instance group to base template before deleting startup template
+        run: |
+          gcloud compute instance-groups managed rolling-action start-update ${{ env.INSTANCE_GROUP }} \
+            --region=${{ env.REGION }} \
+            --type=proactive \
+            --max-unavailable=3 \
+            --minimal-action=replace \
+            --replacement-method=recreate \
+            --max-surge=0 \
+            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/global/instanceTemplates/${{ env.INSTANCE_TEMPLATE }},name=base
+          
+          # Wait for update to complete
+          gcloud compute instance-groups managed wait-until ${{ env.INSTANCE_GROUP }} \
+            --version-target-reached \
+            --region=${{ env.REGION }}
+        continue-on-error: true
+
       - name: Delete old startup template if exists
         run: |
           gcloud compute instance-templates delete ${{ env.INSTANCE_TEMPLATE }}-startup \
             --quiet 2>/dev/null || true
+        continue-on-error: true
 
       - name: Create new instance template with startup script
         run: |
@@ -89,7 +107,7 @@ jobs:
           sleep 90
           nohup java -jar ./Api-Gateway/target/Api-Gateway-1.0.0.jar > /home/madubhashinimanusha/gateway.log 2>&1 &'
 
-      - name: Update the instance group with the new image
+      - name: Update the instance group with the new startup template
         run: |
           gcloud compute instance-groups managed rolling-action start-update ${{ env.INSTANCE_GROUP }} \
             --region=${{ env.REGION }} \
