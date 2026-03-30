@@ -65,19 +65,14 @@ jobs:
       - name: Delete old startup template if exists
         run: |
           gcloud compute instance-templates delete ${{ env.INSTANCE_TEMPLATE }}-startup \
-            --region=${{ env.REGION }} --quiet 2>/dev/null || true
+            --quiet 2>/dev/null || true
 
       - name: Create new instance template with startup script
         run: |
-          # Get machine type and other config from existing template
           MACHINE_TYPE=$(gcloud compute instance-templates describe ${{ env.INSTANCE_TEMPLATE }} \
-            --region=${{ env.REGION }} \
-            --format="value(properties.machineType)" 2>/dev/null || \
-            gcloud compute instance-templates describe ${{ env.INSTANCE_TEMPLATE }} \
-            --format="value(properties.machineType)")
+            --format="value(properties.machineType)" 2>/dev/null || echo "e2-medium")
 
           gcloud compute instance-templates create ${{ env.INSTANCE_TEMPLATE }}-startup \
-            --region=${{ env.REGION }} \
             --machine-type=$MACHINE_TYPE \
             --image=${{ env.IMAGE_NAME }} \
             --image-project=${{ secrets.GCP_PROJECT_ID }} \
@@ -103,4 +98,4 @@ jobs:
             --minimal-action=replace \
             --replacement-method=recreate \
             --max-surge=0 \
-            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/regions/${{ env.REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE }}-startup,name=latest
+            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/global/instanceTemplates/${{ env.INSTANCE_TEMPLATE }}-startup,name=latest
