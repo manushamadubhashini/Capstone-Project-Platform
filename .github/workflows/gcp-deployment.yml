@@ -41,5 +41,6 @@ jobs:
             run: |
               gcloud compute ssh  ${{ env.USER_NAME }}@${{ env.VM_NAME }} --zone=${{ env.ZONE }} 
               --command "echo 'Connected to vm-platform-seed successfully!' &&
-              pwd && whoami
+              pwd && whoami 
+              "
 
