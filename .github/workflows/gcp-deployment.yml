@@ -13,6 +13,7 @@ jobs:
           VM_NAME: vm-platform-seed
           ZONE: asia-southeast1-c
           USER_NAME: madubhashinimanusha
+          IMAGE_NAME: vm-platform-seed-boot-image-2
 
         permissions:
           contents: 'read'
@@ -49,5 +50,9 @@ jobs:
 
           - name: Stop the vm-platform-seed instance
             run: gcloud compute instances stop ${{ env.VM_NAME }} --zone=${{ env.ZONE }}
+
+          - name: Delete the boot disk image
+            run: gcloud compute images delete ${{ env.IMAGE_NAME }}
+
                  
 
