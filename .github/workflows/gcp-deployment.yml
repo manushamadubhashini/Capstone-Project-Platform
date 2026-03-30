@@ -71,7 +71,7 @@ jobs:
         run: |
           gcloud compute instance-templates create ${{ env.INSTANCE_TEMPLATE }}-startup \
             --region=${{ env.REGION }} \
-            --source-instance-template=projects/${{ secrets.GCP_PROJECT_ID }}/regions/${{ env.REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE }} \
+            --source-instance-template=projects/${{ secrets.GCP_PROJECT_ID }}/global/instanceTemplates/${{ env.INSTANCE_TEMPLATE }} \
             --metadata startup-script='#!/bin/bash
           sudo sed -i "/config.platform/d" /etc/hosts
           sudo sed -i "/discovery.platform/d" /etc/hosts
