@@ -45,12 +45,7 @@ jobs:
             --command "cd Capstone-Project-Platform/ && \
               git pull --recurse-submodules && \
               source ~/.bashrc && \
-              mvn clean package -DskipTests && \
-              pm2 delete all || true && \
-              pm2 start ecosystem.config.js && \
-              pm2 save && \
-              sudo env PATH=\$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ${{ env.USER_NAME }} --hp /home/${{ env.USER_NAME }} && \
-              echo 'Done!'"
+              mvn clean package -DskipTests && \"
 
       - name: Stop the vm-platform-seed instance
         run: gcloud compute instances stop ${{ env.VM_NAME }} --zone=${{ env.ZONE }}
