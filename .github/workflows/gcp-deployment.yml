@@ -22,9 +22,6 @@ jobs:
       id-token: 'write'
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
@@ -62,7 +59,7 @@ jobs:
             --source-disk-zone=${{ env.ZONE }} \
             --storage-location=${{ env.REGION }}
 
-      - name: Update instance group to base template before deleting startup template
+      - name: Update the instance group with the new image
         run: |
           gcloud compute instance-groups managed rolling-action start-update ${{ env.INSTANCE_GROUP }} \
             --region=${{ env.REGION }} \
@@ -71,49 +68,4 @@ jobs:
             --minimal-action=replace \
             --replacement-method=recreate \
             --max-surge=0 \
-            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/global/instanceTemplates/${{ env.INSTANCE_TEMPLATE }},name=base
-          
-          # Wait for update to complete
-          gcloud compute instance-groups managed wait-until ${{ env.INSTANCE_GROUP }} \
-            --version-target-reached \
-            --region=${{ env.REGION }}
-        continue-on-error: true
-
-      - name: Delete old startup template if exists
-        run: |
-          gcloud compute instance-templates delete ${{ env.INSTANCE_TEMPLATE }}-startup \
-            --quiet 2>/dev/null || true
-        continue-on-error: true
-
-      - name: Create new instance template with startup script
-        run: |
-          MACHINE_TYPE=$(gcloud compute instance-templates describe ${{ env.INSTANCE_TEMPLATE }} \
-            --format="value(properties.machineType)" 2>/dev/null || echo "e2-medium")
-
-          gcloud compute instance-templates create ${{ env.INSTANCE_TEMPLATE }}-startup \
-            --machine-type=$MACHINE_TYPE \
-            --image=${{ env.IMAGE_NAME }} \
-            --image-project=${{ secrets.GCP_PROJECT_ID }} \
-            --metadata startup-script='#!/bin/bash
-          sudo sed -i "/config.platform/d" /etc/hosts
-          sudo sed -i "/discovery.platform/d" /etc/hosts
-          echo "127.0.0.1 config.platform discovery.platform" | sudo tee -a /etc/hosts
-          export SDKMAN_DIR="/home/madubhashinimanusha/.sdkman"
-          [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
-          cd /home/madubhashinimanusha/Capstone-Project-Platform/
-          nohup java -jar ./Service-Registry/target/Service-Registry-1.0.0.jar > /home/madubhashinimanusha/registry.log 2>&1 &
-          sleep 90
-          nohup java -jar ./Config-Server/target/Config-Server-1.0.0.jar > /home/madubhashinimanusha/config.log 2>&1 &
-          sleep 90
-          nohup java -jar ./Api-Gateway/target/Api-Gateway-1.0.0.jar > /home/madubhashinimanusha/gateway.log 2>&1 &'
-
-      - name: Update the instance group with the new startup template
-        run: |
-          gcloud compute instance-groups managed rolling-action start-update ${{ env.INSTANCE_GROUP }} \
-            --region=${{ env.REGION }} \
-            --type=proactive \
-            --max-unavailable=3 \
-            --minimal-action=replace \
-            --replacement-method=recreate \
-            --max-surge=0 \
-            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/global/instanceTemplates/${{ env.INSTANCE_TEMPLATE }}-startup,name=latest
+            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/regions/${{ env.REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE }},name=0-1774871357614
