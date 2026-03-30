@@ -69,9 +69,18 @@ jobs:
 
       - name: Create new instance template with startup script
         run: |
+          # Get machine type and other config from existing template
+          MACHINE_TYPE=$(gcloud compute instance-templates describe ${{ env.INSTANCE_TEMPLATE }} \
+            --region=${{ env.REGION }} \
+            --format="value(properties.machineType)" 2>/dev/null || \
+            gcloud compute instance-templates describe ${{ env.INSTANCE_TEMPLATE }} \
+            --format="value(properties.machineType)")
+
           gcloud compute instance-templates create ${{ env.INSTANCE_TEMPLATE }}-startup \
             --region=${{ env.REGION }} \
-            --source-instance-template=projects/${{ secrets.GCP_PROJECT_ID }}/global/instanceTemplates/${{ env.INSTANCE_TEMPLATE }} \
+            --machine-type=$MACHINE_TYPE \
+            --image=${{ env.IMAGE_NAME }} \
+            --image-project=${{ secrets.GCP_PROJECT_ID }} \
             --metadata startup-script='#!/bin/bash
           sudo sed -i "/config.platform/d" /etc/hosts
           sudo sed -i "/discovery.platform/d" /etc/hosts
