@@ -39,9 +39,6 @@ jobs:
             run: gcloud compute instances start ${{ env.VM_NAME }} --zone=${{ env.ZONE }}
 
           - name: Connect with the vm-platform-seed instance through SSH
-            run: gcloud compute ssh vm-platform-seed --zone=asia-southeast1-c
-
-          - name: Connect with the vm-platform-seed instance through SSH
             run: |
               gcloud compute ssh ${{ env.USER_NAME }}@${{ env.VM_NAME }} \
                 --zone=${{ env.ZONE }} \
