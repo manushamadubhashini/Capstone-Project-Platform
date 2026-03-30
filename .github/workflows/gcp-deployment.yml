@@ -22,6 +22,9 @@ jobs:
       id-token: 'write'
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
@@ -59,6 +62,42 @@ jobs:
             --source-disk-zone=${{ env.ZONE }} \
             --storage-location=${{ env.REGION }}
 
+      - name: Write startup script
+        run: |
+          cat > /tmp/startup.sh << 'STARTUPEOF'
+          #!/bin/bash
+          # Fix host mappings
+          sudo sed -i "/config.platform/d" /etc/hosts
+          sudo sed -i "/discovery.platform/d" /etc/hosts
+          echo "127.0.0.1 config.platform discovery.platform" | sudo tee -a /etc/hosts
+
+          # Load Java via SDKMAN
+          export SDKMAN_DIR="/home/madubhashinimanusha/.sdkman"
+          [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
+
+          # Start Service Registry
+          cd /home/madubhashinimanusha/Capstone-Project-Platform/
+          nohup java -jar ./Service-Registry/target/Service-Registry-1.0.0.jar \
+            > /home/madubhashinimanusha/registry.log 2>&1 &
+          sleep 45
+
+          # Start Config Server
+          nohup java -jar ./Config-Server/target/Config-Server-1.0.0.jar \
+            > /home/madubhashinimanusha/config.log 2>&1 &
+          sleep 45
+
+          # Start API Gateway
+          nohup java -jar ./Api-Gateway/target/Api-Gateway-1.0.0.jar \
+            > /home/madubhashinimanusha/gateway.log 2>&1 &
+          STARTUPEOF
+
+      - name: Create new instance template with startup script
+        run: |
+          gcloud compute instance-templates create ${{ env.INSTANCE_TEMPLATE }}-startup \
+            --source-instance-template=projects/${{ secrets.GCP_PROJECT_ID }}/regions/${{ env.REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE }} \
+            --region=${{ env.REGION }} \
+            --metadata-from-file=startup-script=/tmp/startup.sh
+
       - name: Update the instance group with the new image
         run: |
           gcloud compute instance-groups managed rolling-action start-update ${{ env.INSTANCE_GROUP }} \
@@ -68,4 +107,4 @@ jobs:
             --minimal-action=replace \
             --replacement-method=recreate \
             --max-surge=0 \
-            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/regions/${{ env.REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE }},name=0-1774871357614
+            --version=template=projects/${{ secrets.GCP_PROJECT_ID }}/regions/${{ env.REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE }}-startup,name=latest
