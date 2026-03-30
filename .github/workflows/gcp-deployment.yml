@@ -93,6 +93,11 @@ jobs:
 
       - name: Create new instance template with startup script
         run: |
+          # Delete old startup template if exists
+          gcloud compute instance-templates delete ${{ env.INSTANCE_TEMPLATE }}-startup \
+            --region=${{ env.REGION }} --quiet || true
+
+          # Create fresh template with startup script
           gcloud compute instance-templates create ${{ env.INSTANCE_TEMPLATE }}-startup \
             --source-instance-template=projects/${{ secrets.GCP_PROJECT_ID }}/regions/${{ env.REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE }} \
             --region=${{ env.REGION }} \
