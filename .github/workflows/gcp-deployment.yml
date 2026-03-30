@@ -84,9 +84,9 @@ jobs:
           [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
           cd /home/madubhashinimanusha/Capstone-Project-Platform/
           nohup java -jar ./Service-Registry/target/Service-Registry-1.0.0.jar > /home/madubhashinimanusha/registry.log 2>&1 &
-          sleep 45
+          sleep 90
           nohup java -jar ./Config-Server/target/Config-Server-1.0.0.jar > /home/madubhashinimanusha/config.log 2>&1 &
-          sleep 45
+          sleep 90
           nohup java -jar ./Api-Gateway/target/Api-Gateway-1.0.0.jar > /home/madubhashinimanusha/gateway.log 2>&1 &'
 
       - name: Update the instance group with the new image
